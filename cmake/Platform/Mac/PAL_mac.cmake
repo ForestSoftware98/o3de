@@ -64,7 +64,10 @@ set(LY_ASSET_DEPLOY_ASSET_TYPE "mac" CACHE STRING "Set the asset type for deploy
 
 # Set the deployment target for MacOS
 set(LY_MAC_DEPLOYMENT_TARGET "15.0" CACHE STRING "Mac Deployment Target")
-set(CMAKE_OSX_DEPLOYMENT_TARGET ${LY_MAC_DEPLOYMENT_TARGET})
+# This needs to be a cache variable: in project-centric builds this file is included from the engine's
+# subdirectory scope, so a normal variable never reaches the top-level directory the Xcode generator reads
+# from, and the deployment target silently falls back to the SDK version.
+set(CMAKE_OSX_DEPLOYMENT_TARGET ${LY_MAC_DEPLOYMENT_TARGET} CACHE STRING "Mac Deployment Target" FORCE)
 
 # Set the python cmd tool
 ly_set(LY_PYTHON_CMD ${CMAKE_CURRENT_SOURCE_DIR}/python/python.sh)
