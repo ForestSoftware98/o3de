@@ -295,7 +295,7 @@ namespace AZ
             }
             else
             {
-                //Everything else falls under MTLStorageModeManaged memory on Macs and MTLStorageModeShared on ios.
+                //Everything else falls under MTLStorageModeShared memory as Apple Silicon Macs and ios have unified memory.
                 return GetCPUGPUMemoryMode();
             }
         }

@@ -71,10 +71,8 @@ namespace AZ
         
             bool IsDepthStencilMerged(MTLPixelFormat mtlFormat)
             {
-                if(mtlFormat == MTLPixelFormatDepth24Unorm_Stencil8)
-                {
-                    return true;
-                }
+                //No mac specific merged depth stencil format. MTLPixelFormatDepth24Unorm_Stencil8 is not supported on Apple Silicon.
+                AZ_UNUSED(mtlFormat);
                 return false;
             }
         
@@ -83,7 +81,8 @@ namespace AZ
                 switch (format)
                 {
                 case RHI::Format::D24_UNORM_S8_UINT:
-                    return MTLPixelFormatDepth24Unorm_Stencil8;
+                    //MTLPixelFormatDepth24Unorm_Stencil8 is not supported on Apple Silicon. This is the replacement suggested by Apple.
+                    return MTLPixelFormatDepth32Float_Stencil8;
                 case RHI::Format::D16_UNORM:
                     return MTLPixelFormatDepth16Unorm;
                 case RHI::Format::BC1_UNORM:
@@ -193,10 +192,12 @@ namespace AZ
                     return false;
                 }
                 
+                AZ_UNUSED(mtlDevice);
                 if(format == RHI::Format::D24_UNORM_S8_UINT)
                 {
-                    return mtlDevice.depth24Stencil8PixelFormatSupported;
-                }                
+                    //Never supported on Apple Silicon
+                    return false;
+                }
                 return true;
             }
         
@@ -216,19 +217,16 @@ namespace AZ
         
             MTLResourceOptions CovertStorageMode(MTLStorageMode storageMode)
             {
-                switch(storageMode)
-                {
-                    case MTLStorageModeManaged:
-                        return MTLResourceStorageModeManaged;
-                    default:
-                        AZ_Assert(false, "Type not supported");
-                        return MTLResourceStorageModeShared;
-                }
+                //No mac specific storageMode.
+                AZ_UNUSED(storageMode);
+                AZ_Assert(false, "Type not supported");
+                return MTLResourceStorageModeShared;
             }
         
             MTLStorageMode GetCPUGPUMemoryMode()
             {
-                return  MTLStorageModeManaged;
+                //Apple Silicon has unified memory
+                return MTLStorageModeShared;
             }
         
         } //Platform

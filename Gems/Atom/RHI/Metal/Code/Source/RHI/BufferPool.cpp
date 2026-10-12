@@ -183,7 +183,7 @@ namespace AZ
         {
             //MTLStorageModeShared - We need to do nothing here as the memory is shared
             //MTLStorageModePrivate - Do nothing because the Resolver will take care of this via a staging buffer
-            //MTLStorageModeManaged - The method below should address synchronization needed for MTLStorageModeManaged memory for mac
+            //The method below is a hook for platform specific storage modes. No platform needs it at the moment.
             Platform::UnMapBufferInternal(bufferBase);
         }
         

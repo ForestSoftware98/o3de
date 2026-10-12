@@ -19,7 +19,8 @@ namespace Platform
 {
     AZ::RHI::PhysicalDeviceType GetPhysicalDeviceType(id<MTLDevice> mtlDevice)
     {
-        if (mtlDevice.lowPower)
+        //Apple Silicon gpus share memory with the cpu. Anything else is a discrete (external) gpu.
+        if (mtlDevice.hasUnifiedMemory)
         {
             return AZ::RHI::PhysicalDeviceType::GpuIntegrated;
         }
@@ -127,64 +128,38 @@ namespace Platform
 
     void PublishBufferCpuChangeOnGpu(id<MTLBuffer> mtlBuffer, size_t bufferOffset, size_t bufferSize)
     {
-        if(mtlBuffer.storageMode == MTLStorageModeManaged)
-        {
-            [mtlBuffer didModifyRange:NSMakeRange(bufferOffset, bufferSize)];
-        }
+        //No synchronization needed as Apple Silicon uses shared memory and MTLStorageModeManaged has no effect on it
+        AZ_UNUSED(mtlBuffer);
+        AZ_UNUSED(bufferOffset);
+        AZ_UNUSED(bufferSize);
     }
 
     void PublishBufferGpuChangeOnCpu(id<MTLBlitCommandEncoder> blitEncoder, id<MTLBuffer> mtlBuffer)
     {
-        if(blitEncoder && mtlBuffer.storageMode == MTLStorageModeManaged)
-        {
-            [blitEncoder synchronizeResource:mtlBuffer];
-        }
+        //No synchronization needed as Apple Silicon uses shared memory and MTLStorageModeManaged has no effect on it
+        AZ_UNUSED(blitEncoder);
+        AZ_UNUSED(mtlBuffer);
     }
 
     void PublishTextureGpuChangeOnCpu(id<MTLBlitCommandEncoder> blitEncoder, id<MTLTexture> mtlTexture)
     {
-        if(blitEncoder && mtlTexture.storageMode == MTLStorageModeManaged)
-        {
-            [blitEncoder synchronizeResource:mtlTexture];
-        }
+        //No synchronization needed as Apple Silicon uses shared memory and MTLStorageModeManaged has no effect on it
+        AZ_UNUSED(blitEncoder);
+        AZ_UNUSED(mtlTexture);
     }
 
     AZ::RHI::ResultCode MapBufferInternal(const AZ::RHI::DeviceBufferMapRequest& request, AZ::RHI::DeviceBufferMapResponse& response)
     {
-        AZ::Metal::Buffer& buffer = *static_cast<AZ::Metal::Buffer*>(request.m_buffer);
-        MTLStorageMode mtlStorageMode = buffer.GetMemoryView().GetStorageMode();
-        
-        switch(mtlStorageMode)
-        {
-            case MTLStorageModeManaged:
-            {
-                void* systemAddress = buffer.GetMemoryView().GetCpuAddress();
-                AZ::Metal::CpuVirtualAddress mappedData = static_cast<AZ::Metal::CpuVirtualAddress>(systemAddress);
-                
-                if (!mappedData)
-                {
-                    return AZ::RHI::ResultCode::Fail;
-                }
-                mappedData += request.m_byteOffset;                
-                response.m_data = mappedData;
-                buffer.SetMapRequestOffset(static_cast<uint32_t>(request.m_byteOffset));
-                break;
-            }
-            default:
-            {
-                AZ_Assert(false, "Storage type not supported.");
-                return AZ::RHI::ResultCode::InvalidArgument;
-            }
-        }
-        return AZ::RHI::ResultCode::Success;
+        //MTLStorageModeShared and MTLStorageModePrivate are handled by the BufferPool and there is no mac specific storage mode.
+        AZ_UNUSED(request);
+        AZ_UNUSED(response);
+        AZ_Assert(false, "Storage type not supported.");
+        return AZ::RHI::ResultCode::InvalidArgument;
     }
 
     void UnMapBufferInternal(AZ::RHI::DeviceBuffer& bufferBase)
     {
-        AZ::Metal::Buffer& buffer = static_cast<AZ::Metal::Buffer&>(bufferBase);
-        //Ony need to handle MTLStorageModeManaged memory.
-        PublishBufferCpuChangeOnGpu(buffer.GetMemoryView().GetGpuAddress<id<MTLBuffer>>(),
-                               buffer.GetMemoryView().GetOffset() + buffer.GetMapRequestOffset(),
-                               buffer.GetMemoryView().GetSize());
+        //No need to do anything here as there is no mac specific storage mode
+        AZ_UNUSED(bufferBase);
     }
 }

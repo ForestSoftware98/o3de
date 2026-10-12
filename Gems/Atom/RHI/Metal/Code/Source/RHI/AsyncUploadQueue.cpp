@@ -36,7 +36,7 @@ namespace AZ
             m_commandBuffer.Init(m_copyQueue->GetPlatformQueue());
             
             NSUInteger bufferOptions = MTLResourceCPUCacheModeWriteCombined //< optimize for cpu write once
-                                     | CovertStorageMode(GetCPUGPUMemoryMode()) //< Managed for mac and shared for ios
+                                     | CovertStorageMode(GetCPUGPUMemoryMode()) //< Shared for mac and ios
                                      | MTLResourceHazardTrackingModeUntracked //< The upload queue already has to track this so tell the driver not to duplicate the work
                                      ;
              
