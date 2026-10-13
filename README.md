@@ -1,3 +1,60 @@
+# O3DE on Apple Silicon (experimental fork)
+
+> **Work in progress.** This is an unofficial, experimental fork of [O3DE](https://github.com/o3de/o3de) focused on
+> macOS on Apple Silicon with the Metal renderer. It still has bugs and missing features, it has only been tested on a
+> basic scene, and it is not ready for production use. It is not affiliated with or endorsed by the O3DE project.
+> For the official engine, use [o3de/o3de](https://github.com/o3de/o3de).
+
+## What this fork changes
+
+All changes live in the `mac-apple-silicon` branch, on top of the upstream `development` branch.
+
+- **Deployment target in project builds.** The macOS deployment target was not applied when building a project
+  (as opposed to building the engine), so Xcode fell back to the SDK version and the build failed with the macOS 27 SDK.
+- **Metal backend without deprecated APIs.** The Mac Metal backend no longer uses the APIs deprecated in macOS 27
+  (`MTLStorageModeManaged`, `MTLPixelFormatDepth24Unorm_Stencil8`, `lowPower`). It now uses shared memory, like the iOS
+  backend already does.
+
+## Status
+
+Tested with Xcode 27 on macOS 27, on a single Apple Silicon Mac.
+
+| | Status |
+|---|---|
+| Build the engine (arm64, Xcode generator) | Works |
+| Build a project from the Project Manager | Works |
+| Open the Editor and render the default level with Metal | Works |
+| Game mode in the Editor | Works, see mouse capture below |
+
+## Known issues
+
+- Reconfiguring a project with CMake can fail with `patch does not apply` in the `tinyusdz` dependency, because its
+  patch is applied again on already patched sources. Reverting the patch in the build folder's `_deps/tinyusdz_repo-src`
+  works around it.
+- The mouse cursor is not captured in game mode unless the Editor is granted the Accessibility permission in macOS.
+- Textures processed while a level is open are not hot reloaded. Reopen the level to see them.
+- The texture memory statistics in the viewport overlay always show 0.
+- The hair shader `HairShortCutGeometryDepthAlpha` has no Metal variant, so hair rendering does not work.
+- `DiffuseProbeGrid` global illumination is not available.
+- Nothing beyond the default level has been tested yet: physics, animation, audio, and packaging a game are unverified.
+
+## Building
+
+Requirements: Xcode, CMake and Git LFS.
+
+```
+git clone https://github.com/ForestSoftware98/o3de.git
+cd o3de
+git lfs pull
+python/get_python.sh
+cmake -B build/mac -S . -G Xcode
+cmake --build build/mac --target Editor AssetProcessor ProjectManager --config profile
+```
+
+The rest of this document is the original O3DE README.
+
+---
+
 # O3DE (Open 3D Engine)
 
 O3DE (Open 3D Engine) is an open-source, real-time, multi-platform 3D engine that enables developers and content creators to build AAA games, cinema-quality 3D worlds, and high-fidelity simulations without any fees or commercial obligations.
